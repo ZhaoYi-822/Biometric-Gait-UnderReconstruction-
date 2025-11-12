@@ -2,9 +2,8 @@ import os
 
 import pandas as pd
 import os
-#遍历获得文件
 def FilesPath(path):
-    filePaths = [] # 存储目录下的所有文件名，含路径
+    filePaths = [] 
     for root,dirs,files in os.walk(path):
         for file in files:
             filePaths.append(os.path.join(root,file))
@@ -31,3 +30,4 @@ if __name__ == '__main__':
     Total_file = FilesPath('C:\\Users\\zhao\\PycharmProjects\\gait\\gait_TS')
     # train_TS(Total_file)
     test_TS(Total_file)
+
