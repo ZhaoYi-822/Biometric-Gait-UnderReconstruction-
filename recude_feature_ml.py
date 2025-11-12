@@ -39,8 +39,6 @@ def avova():
     pre = []
     rec = []
     f1score = []
-    train_time = 0
-    t0 = ti.time()
     for i, (train_index, test_index) in enumerate(kf.split(X_known)):
         # 训练集只包含已知类数据
         X_train, y_train = X_known.iloc[train_index], y_known.iloc[train_index]
@@ -80,38 +78,20 @@ def avova():
         pre.append(precision)
         rec.append(recall)
         f1score.append(f1)
-
-    acc = scores
-    print("交叉验证得分:", scores)
-    print("平均交叉验证得分:", np.mean(scores) * 100)
-
-    print("精确率得分:", pre)
-    print("平均精确率:", np.mean(pre) * 100)
-
-    print("精确率得分:", rec)
-    print("平均召回率:", np.mean(rec) * 100)
-
-    print("F1值:", f1score)
-    print("平均F1值:", np.mean(f1score))
-
-    t1 = ti.time()
-    time = t1 - t0
-    train_time = time + train_time
-    print(train_time)
 def cross_validation_fold(train_index, test_index, X_known, y_known, unknown_split,x):
-    # 训练集和测试集划分
+
     X_train, y_train = X_known.iloc[train_index], y_known.iloc[train_index]
     X_test_known, y_test_known = X_known.iloc[test_index], y_known.iloc[test_index]
 
-    # 合并已知类和未知类的测试集
+
     X_test = pd.concat([X_test_known, unknown_split.iloc[:, :10]], ignore_index=True)
     y_test = pd.concat([y_test_known, unknown_split.iloc[:, 10]], ignore_index=True)
 
-    # 数据标准化
+
     X_train = Stand_X.fit_transform(X_train)
     X_test = Stand_X.transform(X_test)
 
-    # 固定 C 值的 SVM 模型
+
     model = SVC(C=21, kernel='rbf', decision_function_shape='ovr', probability=True)
 
     model.fit(X_train, y_train)
@@ -124,7 +104,7 @@ def cross_validation_fold(train_index, test_index, X_known, y_known, unknown_spl
     y_pred[max_prob < threshold] = 51
 
 
-    # 预测并计算准确率
+
     cm = confusion_matrix(y_test, y_pred)
 
     diam = np.trace(cm)
@@ -142,22 +122,13 @@ def cross_validation_fold(train_index, test_index, X_known, y_known, unknown_spl
     recall = TP / (TP + FN)
     f1 = 2 * precision * recall / (precision + recall)
     y=[accuracy, precision, recall, f1]
-    # print("准确",accuracy)
-    # print("精确",precision)
-    # print("召回",recall)
-    # print("F1",f1)
-
     x.append(y)
     return x
 
 
 
 def parallel_cross_validation(X_known, y_known, unknown_splits, n_splits=5):
-    # 交叉验证折叠
     kf = KFold(n_splits=n_splits, shuffle=True,random_state=42)
-
-    # 设置多进程
-    t0=ti.time()
     x=[]
     with Pool() as pool:
         y = pool.starmap(
@@ -165,29 +136,13 @@ def parallel_cross_validation(X_known, y_known, unknown_splits, n_splits=5):
             [(train_index, test_index, X_known, y_known, unknown_splits[i],x)
              for i, (train_index, test_index) in enumerate(kf.split(X_known))]
         )
-    t1 = ti.time()
-    time = t1 - t0
-    print(time)
-    # 返回平均准确率
     return y
-
-def multisvm():
-    known_data = pd.read_csv('new_gait_dataset/avova.csv')
-    unknown_data = pd.read_csv('new_gait_dataset/avova_unknow.csv')
-    unknown_splits = np.array_split(unknown_data, 10)
-    X_known = known_data.iloc[:, :10]
-    y_known = known_data.iloc[:, 10]
-    x = parallel_cross_validation(X_known, y_known, unknown_splits, n_splits=5)
-    z = np.array(x).reshape(5, 4)
-    meandata = np.mean(z, axis=0)
-    print(z[:, 0])
-
-    print("交叉验证得分:", meandata)
 
 
 if __name__=='__main__':
 
 
     # avova()
+
 
     multisvm()
